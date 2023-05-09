@@ -1,0 +1,18 @@
+{
+    "name": "massdo",
+    "version": "0.0.1",
+    "description": "A script for batching large tasks",
+    "main": "index.js",
+    "type": "module",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "chrispwd",
+    "license": "ISC",
+    "dependencies": {
+        "dotenv": "^16.0.3",
+        "mysql": "^2.18.1",
+        "node-fetch": "^3.3.1",
+        "yargs": "^17.7.2"
+    }
+}
