@@ -39,12 +39,12 @@ export const deleteAllRecords = async (argData) => {
 
 export const testDeleteAllRecords = async (argData) => {
     const allRecordsData = await getAllRecordsData(argData, 'get');
-    await Api.throttleRequests(allRecordsData.batchData, argData.batchSize);
+    await Api.throttleRequests(allRecordsData.batchData, argData.batchSize, argData.delay);
 };
 
 // TODO :: make generic crud commands
 export const deleteResource = async (argData) => {
     const apiData = Api.getApiData(argData, {
-        _: [ `delete` ],
+        _: [ `delete` ]
     });
 };

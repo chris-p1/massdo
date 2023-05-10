@@ -1,0 +1,43 @@
+
+* MassDo
+
+Do things... massively.
+
+* Prerequisites
+
+In order to run this script, ensure you have:
+- Access to the database
+- A developer access token (not required, but recommended)
+
+* Installation
+
+Clone the repo and run ~npm install~.
+
+#+begin_src shell
+npm install
+#+end_src
+
+Copy the contents of the =.env.sample= into a file named =.env= and personalize with your credentials. 
+
+#+begin_src shell
+cat .env.sample > .env
+#+end_src
+
+The examples provided can also be passed as command line options to the script (See [[Usage]] section below for details).
+
+* Usage
+
+Command syntax:
+
+#+begin_src shell
+node index.js [options] COMMAND
+#+end_src
+
+Command example:
+
+#+begin_src shell
+node index.js --env prod --form-id 12345 delete-all-records
+#+end_src
+
+See all available commands with ~node index.js --help~.
+

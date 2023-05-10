@@ -1,4 +1,5 @@
 import fetch from 'node-fetch';
+import * as Util from './util.js';
 
 export const getApiData = (argData, overrides = {}) => {
     if (Object.keys(overrides).length !== 0) {
@@ -64,9 +65,11 @@ export const getPathFromOpts = (argData) => {
         path = '/workspaces';
         break;
     case 'records':
+        Util.checkForMissingArgs(argData, ['formId']);
         path = `/forms/${argData.formId}/records.json`;
         break;
     case 'record':
+        Util.checkForMissingArgs(argData, ['formId', 'recordId']);
         path = `/forms/${argData.formId}/records/${argData.recordId}.json`;
         break;
     default:
@@ -147,6 +150,7 @@ export const throttleRequests = (batchData, batchSize = 20, delay = 200) => {
             const promises = batch.map(req => execute(req)).map(p => p.catch(reject));
             const results = await Promise.all(promises);
             output.push(...results);
+            console.log('Delay: ', delay);
             await delayMS(delay);
         });
         resolve(output);
