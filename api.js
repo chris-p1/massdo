@@ -14,10 +14,10 @@ export const getApiData = (argData, overrides = {}) => {
             },        
             method: overriddenArgData._[0].toUpperCase(),
             env: overriddenArgData.environment,
-            body: {},
+            body: overriddenArgData.body ? JSON.parse(overriddenArgData.body) : null,
             queries: {
                 'access_token': overriddenArgData.token,
-                filter: overriddenArgData.filter ? overriddenArgData.filter : ''
+                filter: overriddenArgData.filter ? JSON.parse(overriddenArgData.filter) : ''
             },
             headers: {
                 'Content-Type': 'application/json',
@@ -32,10 +32,10 @@ export const getApiData = (argData, overrides = {}) => {
         },        
         method: argData._[0].toUpperCase(),
         env: argData.environment,
-        body: {},
+        body: argData.body? argData.body : {},
         queries: {
             'access_token': argData.token,
-            filter: argData.filter ? argData.filter : ''
+            filter: argData.filter ? JSON.parse(argData.filter) : ''
         },
         headers: {
             'Content-Type': 'application/json',
@@ -92,7 +92,7 @@ export const execute = async (apiData) => {
         const response =
               await fetch(API_URL, {
                   method: apiData.method,
-                  body: Object.keys(apiData.body).length !== 0 ? JSON.stringify(apiData.body) : null,
+                  body: apiData.body ? apiData.body : null,
                   headers: apiData.headers ? apiData.headers
                   : ''
               });
@@ -111,7 +111,7 @@ export const encodeQueries = (queries) => {
     for (const query in queries) {
         // skip null params
         if (!queries[query] || query === 'access_token') continue;
-        let buildStr = `&${encodeURIComponent(query)}=${encodeURIComponent(queries[query])}`.replace(/\"/g,'');
+        let buildStr = `&${encodeURI(query)}=${encodeURI(queries[query])}`.replace(/\"/g,'');
         queryStr += buildStr;
     }
     // utils.log('debug', `Param string: ${paramStr}`);
@@ -150,7 +150,6 @@ export const throttleRequests = (batchData, batchSize = 20, delay = 200) => {
             const promises = batch.map(req => execute(req)).map(p => p.catch(reject));
             const results = await Promise.all(promises);
             output.push(...results);
-            console.log('Delay: ', delay);
             await delayMS(delay);
         });
         resolve(output);

@@ -4,6 +4,7 @@ import yargs from 'yargs';
 import * as Api from './api.js';
 import * as Sql from './sql.js';
 import * as Commands from './commands.js';
+import * as Util from './util.js';
 
 const readJsonFile = async (filename) => {
     let rawdata = fs.readFileSync(filename);
@@ -71,6 +72,14 @@ const argv = yargs(process.argv.slice(2))
               { describe: 'Delay a between batch processing (in milliseconds).',
                 requiresArg: true
               })
+      .option('filter',
+              { describe: 'A zengine data filter.',
+                requiresArg: true
+              })
+      .option('body',
+              { describe: 'A request body.',
+                requiresArg: true
+              })
       .option('mysql-host',
               { describe: 'Database host name.',
                 requiresArg: true,
@@ -129,14 +138,29 @@ const clearLastLine = () => {
 
 const runCommand = async (argData) => {
     const command = argData._[0];
+    if (!command) {
+        console.log(`Error: Missing command.\n\nUsage: ${argData['$0']} [options] COMMAND`);
+        process.exit(1);
+    }
     switch (command) {
+    case 'get':
+        Util.checkForMissingArgs(argData, [ 'resource' ]);
+        await Commands.getResource(argData);
+        break;
+    case 'put':
+        Util.checkForMissingArgs(argData, [ 'resource', 'body' ]);
+        await Commands.putResource(argData);
+        break;
     case 'delete':
-        checkForMissingArgs(argData, [ 'resource' ]);
+        Util.checkForMissingArgs(argData, [ 'resource' ]);
+        await Commands.deleteResource(argData);
+        break;
     case 'delete-all-records':
-        checkForMissingArgs(argData, [ 'formId', 'batchSize' ]);
+        Util.checkForMissingArgs(argData, [ 'formId', 'batchSize' ]);
         await Commands.deleteAllRecords(argData);
         break;
     case 'test-delete-all-records':
+        Util.checkForMissingArgs(argData, [ 'formId', 'batchSize' ]);
         await Commands.testDeleteAllRecords(argData);
         break;        
     default:
@@ -150,7 +174,10 @@ const runCommand = async (argData) => {
     console.log("checking token...");
     const tokenRequestData = Api.getApiData(argv, {
         resource: 'workspaces',
-        _: [ 'GET' ]
+        _: [ 'GET' ],
+        filter: null,
+        headers: null,
+        body: null
     });
     const validToken = await Api.checkToken(tokenRequestData);
     if (!validToken) {

@@ -5,7 +5,7 @@ import * as Sql from './sql.js';
 
 export const getAllRecordsData = async (argData, method) => {
     const sqlConnection = await Sql.getSqlConnection(argData);
-    const query = `SELECT id FROM zn_form${argData.formId}_records limit 100`;
+    const query = `SELECT id FROM zn_form${argData.formId}_records`;
     const sqlData = {
         sqlConnection: sqlConnection,
         query: query
@@ -42,9 +42,23 @@ export const testDeleteAllRecords = async (argData) => {
     await Api.throttleRequests(allRecordsData.batchData, argData.batchSize, argData.delay);
 };
 
+export const getResource = async (argData) => {
+    const apiData = Api.getApiData(argData);
+    const response = await Api.execute(apiData);
+    console.log(response);
+};
+
 // TODO :: make generic crud commands
 export const deleteResource = async (argData) => {
     const apiData = Api.getApiData(argData, {
         _: [ `delete` ]
     });
+    await Api.execute(apiData);
+};
+
+// TODO :: make generic crud commands
+export const putResource = async (argData) => {
+    const apiData = Api.getApiData(argData);
+    const res = await Api.execute(apiData);
+    console.log(res);
 };
