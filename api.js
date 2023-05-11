@@ -87,7 +87,8 @@ export const checkToken = async (apiData) => {
 export const execute = async (apiData) => {
     const API_URL =
           `${apiData.resource.baseUrl}${apiData.resource.path}${apiData.queries ? encodeQueries(apiData.queries) : ''}`;
-    console.log(apiData.method, API_URL);
+    // console.log(apiData.method, API_URL);
+    // console.log(apiData.method, '' + apiData.resource.baseUrl + apiData.resource.path);    
     try {
         const response =
               await fetch(API_URL, {
@@ -120,9 +121,12 @@ export const encodeQueries = (queries) => {
 
 export const asyncForEach = async (array, callback) => {
     for (let i = 0; i < array.length; i++) {
-        // callback = (batch) => { batch.map(asyncFunc).map(p => p.catch(reject))
         console.log(`Running batch ${i + 1}...`);
         await callback(array[i], i, array);
+        Util.clearLastLine();
+        Util.clearLastLine();
+        console.log(`Batch ${i + 1} done.`);
+        console.log(Util.progressBar(Util.percent(i, array.length)));
     }
 };
 

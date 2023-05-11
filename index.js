@@ -131,11 +131,6 @@ const argv = yargs(process.argv.slice(2))
       .version('v0.0.1')
       .argv;
 
-const clearLastLine = () => {
-    process.stdout.moveCursor(0, -1) // up one line
-    process.stdout.clearLine(1) // from cursor to end
-};
-
 const runCommand = async (argData) => {
     const command = argData._[0];
     if (!command) {
@@ -181,7 +176,7 @@ const runCommand = async (argData) => {
     });
     const validToken = await Api.checkToken(tokenRequestData);
     if (!validToken) {
-        clearLastLine();
+        //clearLastLine();
         console.log('The access token provided is invalid.');
         process.exit(1);
     }
