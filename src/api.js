@@ -1,5 +1,6 @@
 import fetch from 'node-fetch';
-import * as Util from './util.js';
+import * as Validate from './validate.js';
+import * as Console from './console.js';
 
 export const getApiData = (argData, overrides = {}) => {
     const hasOverrides = Object.keys(overrides).length !== 0;
@@ -65,12 +66,16 @@ export const getPathFromOpts = (argData) => {
     case 'workspaces':
         path = '/workspaces';
         break;
+    case 'workspace':
+        Validate.checkForMissingArgs(argData, ['worskpaceId']);
+        path = `/workspaces/${argData.workspaceId}`;
+        break;
     case 'records':
-        Util.checkForMissingArgs(argData, ['formId']);
+        Validate.checkForMissingArgs(argData, ['formId']);
         path = `/forms/${argData.formId}/records.json`;
         break;
     case 'record':
-        Util.checkForMissingArgs(argData, ['formId', 'recordId']);
+        Validate.checkForMissingArgs(argData, ['formId', 'recordId']);
         path = `/forms/${argData.formId}/records/${argData.recordId}.json`;
         break;
     default:
@@ -123,7 +128,6 @@ export const encodeQueries = (queries) => {
         let buildStr = `&${encodeURI(query)}=${encodeURI(queries[query])}`.replace(/\"/g,'');
         queryStr += buildStr;
     }
-    // utils.log('debug', `Param string: ${paramStr}`);
     return queryStr;
 };
 
@@ -131,10 +135,10 @@ export const asyncForEach = async (array, callback) => {
     for (let i = 0; i < array.length; i++) {
         console.log(`Running batch ${i + 1}...`);
         await callback(array[i], i, array);
-        Util.clearLastLine();
-        Util.clearLastLine();
+        Console.clearLastLine();
+        Console.clearLastLine();
         console.log(`Batch ${i + 1} done.`);
-        console.log(Util.progressBar(Util.percent(i, array.length)));
+        console.log(Console.progressBar(Console.percent(i, array.length)));
     }
 };
 

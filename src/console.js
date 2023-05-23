@@ -1,26 +1,3 @@
-export const checkForMissingArgs = (argData, args) => {
-    for (let arg of args) {
-        if (! Object.keys(argData).includes(arg)) {
-            console.log(`Error: missing argument: `, arg);
-            process.exit(1);
-        }
-    }
-};
-
-export const status = (message) => {
-  const consoleWidth = process.stdout.columns;
-  const statusWidth = message.length;
-  const currentPosition = process.stdout.cursor;
-
-  if (currentPosition + statusWidth <= consoleWidth) {
-    process.stdout.cursorTo(currentPosition);
-    process.stdout.write(message);
-  } else {
-    process.stdout.cursorTo(consoleWidth - statusWidth);
-    process.stdout.write(message);
-  }
-};
-
 export const clearLastLine = () => {
     process.stdout.moveCursor(0, -1) // up one line
     process.stdout.clearLine(1) // from cursor to end

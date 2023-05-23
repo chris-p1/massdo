@@ -4,28 +4,7 @@ import yargs from 'yargs';
 import * as Api from './api.js';
 import * as Sql from './sql.js';
 import * as Commands from './commands.js';
-import * as Util from './util.js';
-
-const readJsonFile = async (filename) => {
-    let rawdata = fs.readFileSync(filename);
-    let jsondata = JSON.parse(rawdata);
-    return await jsondata;
-};
-
-const writeJsonFile = async (filename, data) => {
-    return new Promise((resolve, reject) => {
-        fs.writeFile(`${process.cwd()}/${filename}.json`,
-                     JSON.stringify(data, null, 4),
-                     function(err) {
-                         if (err) {
-                             reject(err);
-                         }
-                         else {
-                             resolve(`${process.cwd()}/${filename}.json`);
-                         }
-                     });
-    });
-};
+import * as Validate from './validate.js';
 
 const argv = yargs(process.argv.slice(2))
       .usage('$0 [options] <command>')
@@ -139,27 +118,27 @@ const runCommand = async (argData) => {
     }
     switch (command) {
     case 'get':
-        Util.checkForMissingArgs(argData, [ 'resource' ]);
+        Validate.checkForMissingArgs(argData, [ 'resource' ]);
         await Commands.getResource(argData);
         break;
     case 'put':
-        Util.checkForMissingArgs(argData, [ 'resource', 'body' ]);
+        Validate.checkForMissingArgs(argData, [ 'resource', 'body' ]);
         await Commands.putResource(argData);
         break;
     case 'delete':
-        Util.checkForMissingArgs(argData, [ 'resource' ]);
+        Validate.checkForMissingArgs(argData, [ 'resource' ]);
         await Commands.deleteResource(argData);
         break;
     case 'delete-all-records':
-        Util.checkForMissingArgs(argData, [ 'formId', 'batchSize' ]);
+        Validate.checkForMissingArgs(argData, [ 'formId', 'batchSize' ]);
         await Commands.deleteAllRecords(argData);
         break;
     case 'test-delete-all-records':
-        Util.checkForMissingArgs(argData, [ 'formId', 'batchSize' ]);
+        Validate.checkForMissingArgs(argData, [ 'formId', 'batchSize' ]);
         await Commands.testDeleteAllRecords(argData);
         break;        
     case 'test-delete-workspaces':
-        console.log('here');
+        console.log('Delete workspaces feature coming soon!');
         break;
     default:
         console.log(`Error: Unknown command: ${command}`);

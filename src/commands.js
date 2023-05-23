@@ -1,5 +1,4 @@
 import 'dotenv/config';
-import fs from 'fs';
 import * as Api from './api.js';
 import * as Sql from './sql.js';
 
@@ -15,6 +14,27 @@ export const getAllRecordsData = async (argData, method) => {
         sqlData: sqlData,
         batchData: batchData
     };
+};
+
+export const getWorkspacesData = async (argData, method) => {
+    const batchData = await batchWorkspaces(argData, method);
+    return {
+        batchData: batchData 
+    };
+};
+
+export const batchWorkspaces = async (argData, method) => {
+    const requests = [];
+    // TODO :: Read in from file, get ws id's, and batch them
+    for (const workspace of workspaces) {
+        // const apiData = Api.getApiData(argData, {
+        //     _: [ `${method}` ],
+        //     recordId: workspace.id,
+        //     resource: 'workspace'
+        // });
+        // requests.push(apiData);
+    }
+    return requests;
 };
 
 export const batchRecords = async (argData, sqlData, method) => {
@@ -40,6 +60,10 @@ export const deleteAllRecords = async (argData) => {
 export const testDeleteAllRecords = async (argData) => {
     const allRecordsData = await getAllRecordsData(argData, 'get');
     await Api.throttleRequests(allRecordsData.batchData, argData.batchSize, argData.delay);
+};
+
+export const testDeleteWorkspaces = async (argData) => {
+    const workspacesData = await getWorkspacesData(argData);
 };
 
 export const getResource = async (argData) => {
