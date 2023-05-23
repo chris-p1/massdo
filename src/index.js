@@ -158,6 +158,9 @@ const runCommand = async (argData) => {
         Util.checkForMissingArgs(argData, [ 'formId', 'batchSize' ]);
         await Commands.testDeleteAllRecords(argData);
         break;        
+    case 'test-delete-workspaces':
+        console.log('here');
+        break;
     default:
         console.log(`Error: Unknown command: ${command}`);
         process.exit(1);
@@ -165,22 +168,13 @@ const runCommand = async (argData) => {
 };
 
 (async () => {
-    console.log(argv);
+    // console.log(argv);
     console.log("checking token...");
-    const tokenRequestData = Api.getApiData(argv, {
-        resource: 'workspaces',
-        _: [ 'GET' ],
-        filter: null,
-        headers: null,
-        body: null
-    });
-    const validToken = await Api.checkToken(tokenRequestData);
+    const validToken = await Api.checkToken(argv);
     if (!validToken) {
-        //clearLastLine();
-        console.log('The access token provided is invalid.');
+        console.log('Error: The access token provided is invalid.');
         process.exit(1);
     }
-    // clearLastLine();
     console.log('checking token... done.');
     await Api.delayMS(200);
     console.log('Processing request...');

@@ -2,7 +2,8 @@ import fetch from 'node-fetch';
 import * as Util from './util.js';
 
 export const getApiData = (argData, overrides = {}) => {
-    if (Object.keys(overrides).length !== 0) {
+    const hasOverrides = Object.keys(overrides).length !== 0;
+    if (hasOverrides) {
         let overriddenArgData = { ...argData };
         for (let key of Object.keys(overrides)) {
             overriddenArgData[`${key}`] = overrides[`${key}`];
@@ -79,8 +80,15 @@ export const getPathFromOpts = (argData) => {
     return path;
 };
 
-export const checkToken = async (apiData) => {
-    const response = await execute(apiData);
+export const checkToken = async (argv) => {
+    const tokenRequestData = getApiData(argv, {
+        resource: 'workspaces',
+        _: [ 'GET' ],
+        filter: null,
+        headers: null,
+        body: null
+    });
+    const response = await execute(tokenRequestData);
     return response.totalCount > 0;
 };
 
@@ -110,8 +118,8 @@ export const execute = async (apiData) => {
 export const encodeQueries = (queries) => {
     let queryStr = `?access_token=${queries["access_token"]}`;
     for (const query in queries) {
-        // skip null params
-        if (!queries[query] || query === 'access_token') continue;
+        const hasNoQueriesOrIsAccessToken = (!queries[query] || query === 'access_token');
+        if (hasNoQueriesOrIsAccessToken) continue;
         let buildStr = `&${encodeURI(query)}=${encodeURI(queries[query])}`.replace(/\"/g,'');
         queryStr += buildStr;
     }
