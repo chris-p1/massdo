@@ -6,7 +6,8 @@ export const getConnData = (argData) => {
         user: argData.user,
         password: argData.password,
         database: argData.database,
-        port: argData.port
+        port: argData.port,
+        multipleStatements: true
     };
 };
 
@@ -29,7 +30,7 @@ export const connect = async (argData) => {
     return sqlConnection;
 };
 
-export const query = async (argData, sqlConnection, query) => {
+export const query = async (sqlConnection, query) => {
     if (sqlConnection == undefined || query == undefined) {
         return null;
     }
@@ -41,4 +42,54 @@ export const query = async (argData, sqlConnection, query) => {
     })
 };
 
+export const workspaceIsDeleted = async (argData, sqlConnection, workspaceData) => {
+    const queryString = `SELECT * FROM workspaces
+    WHERE id = ${workspaceData.workspace_id}
+    AND deleted = 1;
+    `
+    const res = await query(sqlConnection, queryString);
+    return res.length > 0;
+};
 
+export const userIsInWorkspace = async (argData, sqlConnection, workspaceData) => {
+    const queryString = `SELECT * FROM workspaces_users
+    WHERE workspace_id = ${workspaceData.workspace_id}
+    AND user_id = ${argData.userId}
+    AND deleted = 0;
+    `
+    const res = await query(sqlConnection, queryString);
+    return res.length > 0;
+};
+
+export const getTransferWorkspaceSql = async (argData, sqlConnection, workspaceData) => {
+    const userIsMemberOfWorkspace = await userIsInWorkspace(argData, sqlConnection, workspaceData);
+    const hasMissingData = (workspaceData.workspace_id == ''
+                            || workspaceData.owner_id == ''
+                            || argData.userId == ''
+                            || workspaceData.workspace_id == undefined
+                            || workspaceData.owner_id == undefined
+                            || argData.userId == undefined);
+    if (hasMissingData) {
+        // Checks for missing data
+        console.error("missing data");
+        process.exit(1);
+    }
+    if (userIsMemberOfWorkspace) {
+        // Sets new owner in workspaces table
+        var queryString = `UPDATE workspaces SET owned_by_user_id = ${argData.userId} WHERE id = ${workspaceData.workspace_id} AND owned_by_user_id = ${workspaceData.owner_id};`
+        // Swaps role ids of current user and new user in workspaces_users
+        queryString += ` UPDATE workspaces_users SET role_id = 2 WHERE workspace_id = ${workspaceData.workspace_id} AND user_id = ${workspaceData.owner_id};`
+        queryString += ` UPDATE workspaces_users SET role_id = 1 WHERE workspace_id = ${workspaceData.workspace_id} AND user_id = ${argData.userId};`
+        // Swaps role ids of current user and new user in user_workspace_roles
+        queryString += ` UPDATE user_workspace_roles SET workspace_role_id = 2 WHERE workspace_id = ${workspaceData.workspace_id} AND user_id = ${workspaceData.owner_id};`
+        queryString += ` UPDATE user_workspace_roles SET workspace_role_id = 1 WHERE workspace_id = ${workspaceData.workspace_id} AND user_id = ${argData.userId};`
+    } else {
+        // Sets new owner in workspaces table
+        var queryString = `UPDATE workspaces SET owned_by_user_id = ${argData.userId} WHERE id = ${workspaceData.workspace_id} AND owned_by_user_id = ${workspaceData.owner_id};`
+        // Replaces role id of current user with new user in workspaces_users
+        queryString += ` UPDATE workspaces_users SET user_id = ${argData.userId} WHERE workspace_id = ${workspaceData.workspace_id} AND user_id = ${workspaceData.owner_id};`
+        // Replaces role id of current user with new user in user_workspace_roles
+        queryString += ` UPDATE user_workspace_roles SET user_id = ${argData.userId} WHERE workspace_id = ${workspaceData.workspace_id} AND user_id = ${workspaceData.owner_id};`
+    }
+    return queryString;
+};

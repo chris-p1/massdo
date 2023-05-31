@@ -67,8 +67,8 @@ export const getPathFromOpts = (argData) => {
         path = '/workspaces';
         break;
     case 'workspace':
-        Validate.checkForMissingArgs(argData, ['worskpaceId']);
-        path = `/workspaces/${argData.workspaceId}`;
+        Validate.checkForMissingArgs(argData, ['workspaceId']);
+        path = `/workspaces/${argData.workspaceId}.json`;
         break;
     case 'records':
         Validate.checkForMissingArgs(argData, ['formId']);

@@ -1,5 +1,4 @@
 import 'dotenv/config';
-import fs from 'fs';
 import yargs from 'yargs';
 import * as Api from './api.js';
 import * as Sql from './sql.js';
@@ -30,7 +29,7 @@ const argv = yargs(process.argv.slice(2))
       .option('form-id',
               { describe: 'A form ID.',
                 requiresArg: true,
-                alias: ['f','form-id']
+                alias: ['form-id']
               })
       .option('workspace-id',
               { describe: 'A workspace ID.',
@@ -40,6 +39,11 @@ const argv = yargs(process.argv.slice(2))
       .option('record-id',
               { describe: 'A record ID.',
                 requiresArg: true,
+              })
+      .option('user-id',
+              { describe: 'A user ID.',
+                requiresArg: true,
+                default: process.env.ZENGINE_USER,
               })
       .option('batch-size',
               { alias: ['b', 'batch-size'],
@@ -57,6 +61,11 @@ const argv = yargs(process.argv.slice(2))
               })
       .option('body',
               { describe: 'A request body.',
+                requiresArg: true
+              })
+      .option('file',
+              { alias: ['f'],
+                describe: 'A file to read in',
                 requiresArg: true
               })
       .option('mysql-host',
@@ -139,6 +148,8 @@ const runCommand = async (argData) => {
         break;        
     case 'test-delete-workspaces':
         console.log('Delete workspaces feature coming soon!');
+        Validate.checkForMissingArgs(argData, [ 'userId' ]);
+        await Commands.testDeleteWorkspaces(argData);
         break;
     default:
         console.log(`Error: Unknown command: ${command}`);
