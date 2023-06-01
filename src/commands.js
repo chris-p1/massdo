@@ -21,7 +21,6 @@ export const getAllRecordsData = async (argData, method) => {
 export const parseCSVData = async (filePath) => {
     return new Promise((resolve, reject) => {
         const results = [];
-
         fs.createReadStream(filePath)
             .pipe(csv())
             .on('data', (data) => {
@@ -38,38 +37,22 @@ export const parseCSVData = async (filePath) => {
 
 export const getWorkspacesData = async (argData, method) => {
     const workspaces = [];
+    // TODO :: This only returns one workspace for testing. Change for final form
     const testWorskpace = (await parseCSVData(argData.file))[0];
     workspaces.push(testWorskpace);
     return workspaces;
-    // const batchData = await batchWorkspaces(argData, method);
-    // return {
-    //     batchData: batchData 
-    // };
 };
 
 
 export const transferWorkspace = async (sqlConnection, query) => {
-    return await Sql.query(sqlConnection, query);
-    // const transferResult = await Sql.query(argData, sqlConnection, transferQuery);
-    // const sqlData = {
-    //     sqlConnection: sqlConnection,
-    //     query: query
-    // };
-    // return transferResult;
-};
-
-export const batchWorkspaces = async (argData, method) => {
-    const requests = [];
-    // TODO :: Read in from file, get ws id's, and batch them
-    for (const workspace of workspaces) {
-        // const apiData = Api.getApiData(argData, {
-        //     _: [ `${method}` ],
-        //     recordId: workspace.id,
-        //     resource: 'workspace'
-        // });
-        // requests.push(apiData);
+    let result;
+    try {
+        result = await Sql.query(sqlConnection, query);
+    } catch (err) {
+        console.log(err)
+        process.exit(1);
     }
-    return requests;
+    return result;
 };
 
 export const batchRecords = async (argData, sqlData, method) => {
@@ -116,9 +99,24 @@ export const delayMS = (t = 200) => {
 export const asyncForEach = async (array, callback) => {
     for (let i = 0; i < array.length; i++) {
         console.log(`Running delete job ${i + 1}...`);
-        await callback(array[i], i, array);
+        const res = await callback(array[i], i, array);
         console.log(`Done!`);
+        console.log(res);
     }
+};
+
+export const runDeleteJob = async (job) => {
+    return new Promise((resolve, reject) => {
+        const jobResult = [];
+        let transferPromise;
+        let deletePromise;
+        transferPromise =
+            transferWorkspace(job.transferData.connection, job.transferData.query);
+        deletePromise = Api.execute(job.requestData);
+        jobResult.push([transferPromise, deletePromise]);
+        console.log(jobResult);
+        resolve(jobResult);
+    });
 };
 
 export const runDeleteJobs = async (jobs, batchSize = 20, delay = 200) => {
@@ -126,27 +124,21 @@ export const runDeleteJobs = async (jobs, batchSize = 20, delay = 200) => {
         const output = [];
         const batches = split(jobs, batchSize);
         await asyncForEach(batches, async (batch) => {
-            const promises = batch.map(job => {
+            const promises = batch.map((job) => {
                 // TODO :: Figure out a way to promisify the transfer and the delete together
-                const transferData = job[0];
-                const requestData = job[1];
-                return [transferWorkspace(transferData.connection, transferData.query), requestData];
-            }).map(p => p.catch(reject));
+                return runDeleteJob(job);
+            }).map(p => p.catch(reject));;
             const results = await Promise.all(promises);
             output.push(...results);
             await delayMS(delay);
+            resolve(output);
         });
-        resolve(output);
     });
 };
 
-export const testDeleteWorkspaces = async (argData) => {
-    const sqlConnection = await Sql.getSqlConnection(argData);
-    const workspacesData = await getWorkspacesData(argData, 'get');
+export const getDeleteJobs = async (argData, sqlConnection, workspacesData) => {
     const deleteJobs = []
     for (const workspace of workspacesData) {
-        // const workspaceData = workspacesData[0];
-        const deleteJob = [];
         const workspaceIsAlreadyDeleted = await Sql.workspaceIsDeleted(argData, sqlConnection, workspace);
         if (workspaceIsAlreadyDeleted) {
             console.log(`Workspace ${workspace.workspace_id} is already deleted. Skipping...`);
@@ -158,18 +150,24 @@ export const testDeleteWorkspaces = async (argData) => {
             resource: 'workspace',
             workspaceId: workspace.workspace_id
         });
-        // console.log(transferQuery);
-        // console.log(deleteRequest);
-        const transferData = {
-            query: transferQuery,
-            connection: sqlConnection
-        }
-        deleteJob.push(transferData);
-        deleteJob.push(deleteRequest);
+        const deleteJob = {
+            transferData: {
+                query: transferQuery,
+                connection: sqlConnection
+            },
+            requestData: deleteRequest
+        };
         deleteJobs.push(deleteJob);
     }
+    return deleteJobs;
+};
+
+export const testDeleteWorkspaces = async (argData) => {
+    const sqlConnection = await Sql.getSqlConnection(argData);
+    const workspacesData = await getWorkspacesData(argData, 'get');
+    const deleteJobs = await getDeleteJobs(argData, sqlConnection, workspacesData);
     console.log(deleteJobs);
-    await runDeleteJobs(deleteJobs);
+    await runDeleteJobs(deleteJobs, argData.batchSize, argData.delay);
     // console.log(workspacesData);
 };
 
