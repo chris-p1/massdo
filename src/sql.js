@@ -61,6 +61,7 @@ export const userIsInWorkspace = async (argData, sqlConnection, workspaceData) =
     return res.length > 0;
 };
 
+// TODO :: remove test query
 export const getTransferWorkspaceSql = async (argData, sqlConnection, workspaceData) => {
     const userIsMemberOfWorkspace = await userIsInWorkspace(argData, sqlConnection, workspaceData);
     const hasMissingData = (workspaceData.workspace_id == ''
@@ -69,6 +70,9 @@ export const getTransferWorkspaceSql = async (argData, sqlConnection, workspaceD
                             || workspaceData.workspace_id == undefined
                             || workspaceData.owner_id == undefined
                             || argData.userId == undefined);
+    let queryString;
+    // TODO :: remove test query
+    let testString = `SELECT * from workspaces where id = ${workspaceData.workspace_id}`;
     if (hasMissingData) {
         // Checks for missing data
         console.error("missing data");
@@ -76,7 +80,7 @@ export const getTransferWorkspaceSql = async (argData, sqlConnection, workspaceD
     }
     if (userIsMemberOfWorkspace) {
         // Sets new owner in workspaces table
-        var queryString = `UPDATE workspaces SET owned_by_user_id = ${argData.userId} WHERE id = ${workspaceData.workspace_id} AND owned_by_user_id = ${workspaceData.owner_id};`
+        queryString = `UPDATE workspaces SET owned_by_user_id = ${argData.userId} WHERE id = ${workspaceData.workspace_id} AND owned_by_user_id = ${workspaceData.owner_id};`
         // Swaps role ids of current user and new user in workspaces_users
         queryString += ` UPDATE workspaces_users SET role_id = 2 WHERE workspace_id = ${workspaceData.workspace_id} AND user_id = ${workspaceData.owner_id};`
         queryString += ` UPDATE workspaces_users SET role_id = 1 WHERE workspace_id = ${workspaceData.workspace_id} AND user_id = ${argData.userId};`
@@ -85,11 +89,13 @@ export const getTransferWorkspaceSql = async (argData, sqlConnection, workspaceD
         queryString += ` UPDATE user_workspace_roles SET workspace_role_id = 1 WHERE workspace_id = ${workspaceData.workspace_id} AND user_id = ${argData.userId};`
     } else {
         // Sets new owner in workspaces table
-        var queryString = `UPDATE workspaces SET owned_by_user_id = ${argData.userId} WHERE id = ${workspaceData.workspace_id} AND owned_by_user_id = ${workspaceData.owner_id};`
+        queryString = `UPDATE workspaces SET owned_by_user_id = ${argData.userId} WHERE id = ${workspaceData.workspace_id} AND owned_by_user_id = ${workspaceData.owner_id};`
         // Replaces role id of current user with new user in workspaces_users
         queryString += ` UPDATE workspaces_users SET user_id = ${argData.userId} WHERE workspace_id = ${workspaceData.workspace_id} AND user_id = ${workspaceData.owner_id};`
         // Replaces role id of current user with new user in user_workspace_roles
         queryString += ` UPDATE user_workspace_roles SET user_id = ${argData.userId} WHERE workspace_id = ${workspaceData.workspace_id} AND user_id = ${workspaceData.owner_id};`
     }
+    // TODO :: remove test query
+    // return testString;
     return queryString;
 };

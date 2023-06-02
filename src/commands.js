@@ -35,12 +35,13 @@ export const parseCSVData = async (filePath) => {
     });
 }
 
+// TODO :: This only returns one workspace for testing. Change for final form
 export const getWorkspacesData = async (argData, method) => {
-    const workspaces = [];
-    // TODO :: This only returns one workspace for testing. Change for final form
+    // const workspaces = [];
     const testWorskpace = (await parseCSVData(argData.file))[0];
-    workspaces.push(testWorskpace);
-    return workspaces;
+    const workspaces = await parseCSVData(argData.file);
+    // workspaces.push(testWorskpaces);
+    return testWorkspace;
 };
 
 
@@ -101,7 +102,7 @@ export const asyncForEach = async (array, callback) => {
         console.log(`Running delete job ${i + 1}...`);
         const res = await callback(array[i], i, array);
         console.log(`Done!`);
-        console.log(res);
+        // console.log(res);
     }
 };
 
@@ -114,8 +115,9 @@ export const runDeleteJob = async (job) => {
             transferWorkspace(job.transferData.connection, job.transferData.query);
         deletePromise = Api.execute(job.requestData);
         jobResult.push([transferPromise, deletePromise]);
-        console.log(jobResult);
-        resolve(jobResult);
+        // console.log(jobResult);
+        // resolve(jobResult);
+        resolve([transferPromise, deletePromise]);
     });
 };
 
@@ -131,11 +133,13 @@ export const runDeleteJobs = async (jobs, batchSize = 20, delay = 200) => {
             const results = await Promise.all(promises);
             output.push(...results);
             await delayMS(delay);
+            console.log(JSON.stringify(results));
             resolve(output);
         });
     });
 };
 
+// TODO :: remove test jobs
 export const getDeleteJobs = async (argData, sqlConnection, workspacesData) => {
     const deleteJobs = []
     for (const workspace of workspacesData) {
@@ -150,6 +154,18 @@ export const getDeleteJobs = async (argData, sqlConnection, workspacesData) => {
             resource: 'workspace',
             workspaceId: workspace.workspace_id
         });
+        // const testDeleteRequest = await Api.getApiData(argData, {
+        //     _: ['get'],
+        //     resource: 'workspace',
+        //     workspaceId: workspace.workspace_id
+        // });
+        // const deleteJob = {
+        //     transferData: {
+        //         query: transferQuery,
+        //         connection: sqlConnection
+        //     },
+        //     requestData: testDeleteRequest
+        // };
         const deleteJob = {
             transferData: {
                 query: transferQuery,
@@ -166,9 +182,11 @@ export const testDeleteWorkspaces = async (argData) => {
     const sqlConnection = await Sql.getSqlConnection(argData);
     const workspacesData = await getWorkspacesData(argData, 'get');
     const deleteJobs = await getDeleteJobs(argData, sqlConnection, workspacesData);
-    console.log(deleteJobs);
-    await runDeleteJobs(deleteJobs, argData.batchSize, argData.delay);
+    // console.log(deleteJobs);
+    const result = await runDeleteJobs(deleteJobs, argData.batchSize, argData.delay);
     // console.log(workspacesData);
+    console.log(result[0][0]);
+    console.log(result[0][1]);
 };
 
 export const getResource = async (argData, overrides) => {

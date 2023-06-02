@@ -52,6 +52,9 @@ export const getEnvUrl = (argData) => {
     case 'prod':
         url = 'https://api.zenginehq.com/v1';
         break;
+    case 'stage':
+        url = 'https://platform.stage.zenginehq.dev';
+        break;
     default:
         console.log(`Environment ${argData.environment} not implemented yet.`);
         process.exit(1);
@@ -111,12 +114,11 @@ export const execute = async (apiData) => {
                   : ''
               });
         const data = await response.json();
-        if (data.status > 400) throw new Error(`hey! ` + JSON.stringify(data));
+        if (data.status > 400) throw new Error(`Error: >400 calling resource ${apiData.resource.baseUrl}${apiData.resource.path} ` + JSON.stringify(data));
         return data;
     } catch (err) {
-        // console.error(err.message);
-        console.error(err);
-        throw err;
+        console.error(err.message);
+        // console.error(err);
     }    
 };
 
